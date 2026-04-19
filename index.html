@@ -1,4 +1,101 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Discipline Tracker</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+
+    .app {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 20px;
+      width: 320px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .box {
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .box:hover {
+      background: rgba(255,255,255,0.4);
+    }
+
+    .done {
+      background: limegreen !important;
+      text-decoration: line-through;
+    }
+
+    #noteSection {
+      margin-top: 15px;
+      display: none;
+    }
+
+    input {
+      width: 90%;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      color: blue;
+    }
+
+    button {
+      margin-top: 8px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #00c6ff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .progress {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>Discipline Tracker</h1>
+
+  <div class="grid" id="grid"></div>
+
+  <div id="noteSection">
+    <input type="text" id="noteInput" placeholder="What did you do today?">
+    <button onclick="saveNote()">Save</button>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+</div>
+
 <script>
 
 let currentDay = null;
@@ -11,6 +108,7 @@ for (let i = 1; i <= 10; i++) {
   let box = document.createElement("div");
   box.className = "box";
   box.innerText = "Day " + i;
+
   box.onclick = () => selectDay(i);
 
   if (data[i]) {
@@ -20,59 +118,60 @@ for (let i = 1; i <= 10; i++) {
   grid.appendChild(box);
 }
 
+// 🔥 SELECT DAY (STRICT CONTROL)
 function selectDay(day) {
 
-  // 🔥 RULE 1: Only allow next day
-  let completedDays = Object.keys(data).length + 1;
+  let completedCount = Object.keys(data).length;
 
-  if (day !== completedDays) {
-    alert("Complete previous day first!");
+  // Only allow next day
+  if (day !== completedCount + 1) {
+    alert("You must complete Day " + (completedCount + 1) + " first!");
     return;
   }
 
   currentDay = day;
 
   document.getElementById("noteSection").style.display = "block";
-  document.getElementById("noteInput").focus(); // cursor appears
+  document.getElementById("noteInput").focus();
 }
 
+// 🔥 SAVE NOTE (ONLY WAY TO MARK DONE)
 function saveNote() {
+
   let note = document.getElementById("noteInput").value.trim();
 
-  // 🔥 RULE 2: No empty note
+  // No empty note allowed
   if (!note) {
     alert("Write something before saving!");
     return;
   }
 
+  // Save data
   data[currentDay] = note;
-
   localStorage.setItem("tracker", JSON.stringify(data));
 
+  // Mark box done
   document.getElementsByClassName("box")[currentDay - 1]
     .classList.add("done");
 
+  // Reset input
   document.getElementById("noteInput").value = "";
   document.getElementById("noteSection").style.display = "none";
 
   updateUI();
 }
 
+// 🔥 UPDATE PROGRESS
 function updateUI() {
   let completed = Object.keys(data).length;
 
   document.getElementById("progress").innerText =
     "Completed: " + completed + "/10";
-
-  let notesHTML = "";
-
-  for (let day in data) {
-    notesHTML += "Day " + day + ": " + data[day] + "<br>";
-  }
-
-  document.getElementById("notesList").innerHTML = notesHTML;
 }
 
 updateUI();
 
 </script>
+
+</body>
+</html>
