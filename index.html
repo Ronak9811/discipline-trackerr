@@ -123,12 +123,10 @@
 </div>
 
 <!-- 🔊 SOUND -->
-<audio id="clickSound" preload="auto">
-  <source src="https://www.soundjay.com/buttons/button-09.mp3" type="audio/mpeg">
-</audio>
 
 <script>
-
+let clickSound = new Audio("https://www.soundjay.com/buttons/button-09.mp3");
+clickSound.preload = "auto";
 let currentDay = null;
 let data = JSON.parse(localStorage.getItem("tracker")) || {};
 
@@ -145,11 +143,14 @@ document.body.addEventListener("click", () => {
 
 /* 🔊 PLAY SOUND */
 function playClick() {
-  let sound = document.getElementById("clickSound");
-
-  sound.currentTime = 0;
-
-  let playPromise = sound.play();
+  function playClick() {
+  try {
+    clickSound.currentTime = 0;
+    clickSound.play();
+  } catch (e) {
+    console.log("Sound blocked");
+  }
+  }
 
   if (playPromise !== undefined) {
     playPromise.catch(() => {});
