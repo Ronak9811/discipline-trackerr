@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Discipline Tracker</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+
+    .app {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 20px;
+      width: 320px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 15px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .box {
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .box:hover {
+      background: rgba(255,255,255,0.4);
+    }
+
+    .done {
+      background: limegreen !important;
+      text-decoration: line-through;
+    }
+
+    #noteSection {
+      margin-top: 15px;
+      display: none;
+    }
+
+    input {
+      width: 90%;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      margin-top: 8px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #00c6ff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .progress {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .notes {
+      margin-top: 10px;
+      text-align: left;
+      font-size: 13px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>Discipline</h1>
+
+  <div class="grid" id="grid"></div>
+
+  <div id="noteSection">
+    <input type="text" id="noteInput" placeholder="What did you do today?">
+    <button onclick="saveNote()">Save</button>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="notes" id="notesList"></div>
+
+</div>
+
+<script>
+
+let currentDay = null;
+let data = JSON.parse(localStorage.getItem("tracker")) || {};
+
+const grid = document.getElementById("grid");
+
+// Create boxes dynamically
+for (let i = 1; i <= 10; i++) {
+  let box = document.createElement("div");
+  box.className = "box";
+  box.innerText = "Day " + i;
+  box.onclick = () => selectDay(i);
+
+  if (data[i]) {
+    box.classList.add("done");
+  }
+
+  grid.appendChild(box);
+}
+
+function selectDay(day) {
+  currentDay = day;
+  document.getElementById("noteSection").style.display = "block";
+}
+
+function saveNote() {
+  let note = document.getElementById("noteInput").value;
+
+  if (!note) return;
+
+  data[currentDay] = note;
+
+  localStorage.setItem("tracker", JSON.stringify(data));
+
+  document.getElementsByClassName("box")[currentDay - 1]
+    .classList.add("done");
+
+  document.getElementById("noteInput").value = "";
+
+  updateUI();
+}
+
+function updateUI() {
+  let completed = Object.keys(data).length;
+
+  document.getElementById("progress").innerText =
+    "Completed: " + completed + "/10";
+
+  let notesHTML = "";
+
+  for (let day in data) {
+    notesHTML += "Day " + day + ": " + data[day] + "<br>";
+  }
+
+  document.getElementById("notesList").innerHTML = notesHTML;
+}
+
+updateUI();
+
+</script>
+
+</body>
+</html>
