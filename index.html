@@ -1,95 +1,109 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <!-- 🔥 MOST IMPORTANT FOR MOBILE -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Discipline Tracker</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: white;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
 
+    /* 🔥 MAIN APP BOX */
     .app {
-      width: 100%;
-      min-height: 100vh;
+      width: 95%;
+      max-width: 420px;
+      background: white;
+      border-radius: 20px;
       padding: 20px;
-      box-sizing: border-box;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
     }
 
-    h1 {
-      margin-bottom: 20px;
+    h2 {
+      margin-bottom: 15px;
+      color: #333;
     }
 
+    /* GRID */
     .grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 15px;
-      max-width: 600px;
-      margin: auto;
+      gap: 10px;
     }
 
+    /* DAY BOX */
     .box {
-      padding: 20px;
-      border-radius: 15px;
-      background: rgba(255,255,255,0.2);
+      padding: 15px;
+      border-radius: 10px;
+      background: #e0e0e0;
       cursor: pointer;
-      font-size: 16px;
+      font-weight: bold;
       transition: 0.3s;
     }
 
     .box:hover {
-      background: rgba(255,255,255,0.4);
+      transform: scale(1.05);
     }
 
     .done {
-      background: limegreen !important;
+      background: #00c853 !important;
+      color: white;
       text-decoration: line-through;
     }
 
+    /* INPUT AREA */
     #noteSection {
-      margin-top: 25px;
+      margin-top: 15px;
       display: none;
     }
 
     input {
-      width: 60%;
-      padding: 10px;
+      width: 100%;
+      padding: 12px;
       border-radius: 10px;
-      border: none;
-      outline: none;
-      color: blue;
+      border: 1px solid #ccc;
       font-size: 16px;
+      box-sizing: border-box;
     }
 
     button {
       margin-top: 10px;
-      padding: 10px 20px;
+      width: 100%;
+      padding: 12px;
       border: none;
       border-radius: 10px;
-      background: #00c6ff;
+      background: #4facfe;
       color: white;
-      cursor: pointer;
       font-size: 16px;
+      cursor: pointer;
     }
 
-    .notes {
-      margin-top: 20px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-      background: rgba(0,0,0,0.2);
-      padding: 15px;
-      border-radius: 10px;
+    button:hover {
+      background: #2196f3;
     }
 
     .reset {
-      background: red;
+      background: #ff5252;
     }
+
+    .notes {
+      margin-top: 15px;
+      text-align: left;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+
   </style>
 </head>
 
@@ -97,13 +111,12 @@
 
 <div class="app">
 
-  <h1>Discipline Tracker</h1>
+  <h2>🔥 Discipline Tracker</h2>
 
   <div class="grid" id="grid"></div>
 
   <div id="noteSection">
     <input type="text" id="noteInput" placeholder="What did you do today?">
-    <br>
     <button onclick="saveNote()">Save</button>
   </div>
 
@@ -120,18 +133,16 @@ let data = JSON.parse(localStorage.getItem("tracker")) || {};
 
 const grid = document.getElementById("grid");
 
-// CREATE BOXES
+/* CREATE BOXES */
 function createBoxes() {
   grid.innerHTML = "";
 
   for (let i = 1; i <= 10; i++) {
     let box = document.createElement("div");
     box.className = "box";
-    box.innerText = "Day " + i;
+    box.innerText = i;
 
-    if (data[i]) {
-      box.classList.add("done");
-    }
+    if (data[i]) box.classList.add("done");
 
     box.onclick = () => selectDay(i);
 
@@ -139,20 +150,20 @@ function createBoxes() {
   }
 }
 
-// SELECT DAY
+/* SELECT DAY */
 function selectDay(day) {
 
   let completed = Object.keys(data).length;
 
-  // Allow viewing old days
+  // allow viewing old notes
   if (data[day]) {
+    currentDay = day;
     document.getElementById("noteSection").style.display = "block";
     document.getElementById("noteInput").value = data[day];
-    currentDay = day;
     return;
   }
 
-  // Strict order
+  // strict order
   if (day !== completed + 1) {
     alert("Complete Day " + (completed + 1) + " first!");
     return;
@@ -165,7 +176,7 @@ function selectDay(day) {
   document.getElementById("noteInput").focus();
 }
 
-// SAVE NOTE
+/* SAVE NOTE */
 function saveNote() {
   let note = document.getElementById("noteInput").value.trim();
 
@@ -184,7 +195,7 @@ function saveNote() {
   updateNotes();
 }
 
-// SHOW ALL NOTES
+/* SHOW NOTES */
 function updateNotes() {
   let html = "";
 
@@ -195,7 +206,7 @@ function updateNotes() {
   document.getElementById("notesList").innerHTML = html;
 }
 
-// RESET
+/* RESET */
 function resetAll() {
   if (confirm("Reset everything?")) {
     localStorage.removeItem("tracker");
@@ -205,11 +216,11 @@ function resetAll() {
   }
 }
 
-// INIT
+/* INIT */
 createBoxes();
 updateNotes();
 
 </script>
 
 </body>
-</html>
+</html>              
