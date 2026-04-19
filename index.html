@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 
-  <!-- 🔥 MOBILE FIX -->
+  <!-- Mobile fix -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Discipline Tracker</title>
@@ -46,11 +46,11 @@
       background: #e0e0e0;
       cursor: pointer;
       font-weight: bold;
-      transition: 0.3s;
+      transition: 0.2s;
     }
 
-    .box:hover {
-      transform: scale(1.05);
+    .box:active {
+      transform: scale(0.95);
     }
 
     .done {
@@ -85,10 +85,6 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #2196f3;
-    }
-
     .reset {
       background: #ff5252;
     }
@@ -113,51 +109,45 @@
 
   <div id="noteSection">
     <input type="text" id="noteInput" placeholder="What did you do today?">
-    <button onclick="playClick(); saveNote()">Save</button>
+    <button onclick="handleClick(saveNote)">Save</button>
   </div>
 
   <div class="notes" id="notesList"></div>
 
-  <button class="reset" onclick="playClick(); resetAll()">Reset</button>
+  <button class="reset" onclick="handleClick(resetAll)">Reset</button>
 
 </div>
 
-<!-- 🔊 SOUND -->
-
 <script>
+
+// 🔊 SOUND (best possible way)
 let clickSound = new Audio("https://www.soundjay.com/buttons/button-09.mp3");
-clickSound.preload = "auto";
+
+// 📳 VIBRATION (works on mobile always)
+function vibrate() {
+  if (navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+}
+
+// 🔊 + 📳 COMBINED CLICK
+function handleClick(action) {
+  try {
+    clickSound.currentTime = 0;
+    clickSound.play();
+  } catch(e) {}
+
+  vibrate();
+
+  action();
+}
+
 let currentDay = null;
 let data = JSON.parse(localStorage.getItem("tracker")) || {};
 
 const grid = document.getElementById("grid");
 
-/* 🔊 UNLOCK SOUND (mobile fix) */
-document.body.addEventListener("click", () => {
-  let sound = document.getElementById("clickSound");
-  sound.play().then(() => {
-    sound.pause();
-    sound.currentTime = 0;
-  }).catch(() => {});
-}, { once: true });
-
-/* 🔊 PLAY SOUND */
-function playClick() {
-  function playClick() {
-  try {
-    clickSound.currentTime = 0;
-    clickSound.play();
-  } catch (e) {
-    console.log("Sound blocked");
-  }
-  }
-
-  if (playPromise !== undefined) {
-    playPromise.catch(() => {});
-  }
-}
-
-/* CREATE BOXES */
+// CREATE BOXES
 function createBoxes() {
   grid.innerHTML = "";
 
@@ -168,21 +158,17 @@ function createBoxes() {
 
     if (data[i]) box.classList.add("done");
 
-    box.onclick = () => {
-      playClick();
-      selectDay(i);
-    };
+    box.onclick = () => handleClick(() => selectDay(i));
 
     grid.appendChild(box);
   }
 }
 
-/* SELECT DAY */
+// SELECT DAY
 function selectDay(day) {
 
   let completed = Object.keys(data).length;
 
-  // View old notes
   if (data[day]) {
     currentDay = day;
     document.getElementById("noteSection").style.display = "block";
@@ -190,7 +176,6 @@ function selectDay(day) {
     return;
   }
 
-  // Strict order
   if (day !== completed + 1) {
     alert("Complete Day " + (completed + 1) + " first!");
     return;
@@ -203,7 +188,7 @@ function selectDay(day) {
   document.getElementById("noteInput").focus();
 }
 
-/* SAVE NOTE */
+// SAVE NOTE
 function saveNote() {
   let note = document.getElementById("noteInput").value.trim();
 
@@ -222,7 +207,7 @@ function saveNote() {
   updateNotes();
 }
 
-/* SHOW NOTES */
+// SHOW NOTES
 function updateNotes() {
   let html = "";
 
@@ -233,7 +218,7 @@ function updateNotes() {
   document.getElementById("notesList").innerHTML = html;
 }
 
-/* RESET */
+// RESET
 function resetAll() {
   if (confirm("Reset everything?")) {
     localStorage.removeItem("tracker");
@@ -243,7 +228,7 @@ function resetAll() {
   }
 }
 
-/* INIT */
+// INIT
 createBoxes();
 updateNotes();
 
