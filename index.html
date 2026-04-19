@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -9,33 +9,35 @@
       margin: 0;
       font-family: Arial;
       background: linear-gradient(135deg, #1e3c72, #2a5298);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       color: white;
     }
 
     .app {
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
+      width: 100%;
+      min-height: 100vh;
       padding: 20px;
-      border-radius: 20px;
-      width: 320px;
+      box-sizing: border-box;
       text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+      gap: 15px;
+      max-width: 600px;
+      margin: auto;
     }
 
     .box {
-      padding: 15px;
-      border-radius: 10px;
+      padding: 20px;
+      border-radius: 15px;
       background: rgba(255,255,255,0.2);
       cursor: pointer;
+      font-size: 16px;
       transition: 0.3s;
     }
 
@@ -49,36 +51,44 @@
     }
 
     #noteSection {
-      margin-top: 15px;
+      margin-top: 25px;
       display: none;
     }
 
     input {
-      width: 90%;
-      padding: 8px;
-      border-radius: 8px;
+      width: 60%;
+      padding: 10px;
+      border-radius: 10px;
       border: none;
       outline: none;
       color: blue;
+      font-size: 16px;
     }
 
     button {
-      margin-top: 8px;
-      padding: 8px 15px;
+      margin-top: 10px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #00c6ff;
       color: white;
       cursor: pointer;
+      font-size: 16px;
     }
 
-    .progress {
-      margin-top: 10px;
+    .notes {
+      margin-top: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 10px;
     }
 
     .reset {
       background: red;
-      margin-top: 10px;
     }
   </style>
 </head>
@@ -87,16 +97,17 @@
 
 <div class="app">
 
-  <h2>Discipline Tracker</h2>
+  <h1>Discipline Tracker</h1>
 
   <div class="grid" id="grid"></div>
 
   <div id="noteSection">
     <input type="text" id="noteInput" placeholder="What did you do today?">
+    <br>
     <button onclick="saveNote()">Save</button>
   </div>
 
-  <div class="progress" id="progress"></div>
+  <div class="notes" id="notesList"></div>
 
   <button class="reset" onclick="resetAll()">Reset</button>
 
@@ -128,10 +139,20 @@ function createBoxes() {
   }
 }
 
-// SELECT DAY (STRICT ORDER)
+// SELECT DAY
 function selectDay(day) {
+
   let completed = Object.keys(data).length;
 
+  // Allow viewing old days
+  if (data[day]) {
+    document.getElementById("noteSection").style.display = "block";
+    document.getElementById("noteInput").value = data[day];
+    currentDay = day;
+    return;
+  }
+
+  // Strict order
   if (day !== completed + 1) {
     alert("Complete Day " + (completed + 1) + " first!");
     return;
@@ -140,6 +161,7 @@ function selectDay(day) {
   currentDay = day;
 
   document.getElementById("noteSection").style.display = "block";
+  document.getElementById("noteInput").value = "";
   document.getElementById("noteInput").focus();
 }
 
@@ -156,37 +178,38 @@ function saveNote() {
 
   localStorage.setItem("tracker", JSON.stringify(data));
 
-  document.getElementById("noteInput").value = "";
   document.getElementById("noteSection").style.display = "none";
 
   createBoxes();
-  updateUI();
+  updateNotes();
 }
 
-// UPDATE UI
-function updateUI() {
-  let completed = Object.keys(data).length;
+// SHOW ALL NOTES
+function updateNotes() {
+  let html = "";
 
-  document.getElementById("progress").innerText =
-    "Completed: " + completed + "/10";
+  for (let day in data) {
+    html += "<b>Day " + day + ":</b> " + data[day] + "<br>";
+  }
+
+  document.getElementById("notesList").innerHTML = html;
 }
 
-// RESET BUTTON
+// RESET
 function resetAll() {
-  if (confirm("Are you sure you want to reset everything?")) {
+  if (confirm("Reset everything?")) {
     localStorage.removeItem("tracker");
     data = {};
     createBoxes();
-    updateUI();
+    updateNotes();
   }
 }
 
 // INIT
 createBoxes();
-updateUI();
+updateNotes();
 
 </script>
 
 </body>
 </html>
-        
