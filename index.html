@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -34,6 +34,7 @@
     header { margin-bottom: 32px; }
 
     .label {
+      font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -78,6 +79,7 @@
     .progress-text strong { color: var(--accent); font-weight: 600; }
 
     .section-title {
+      font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
@@ -116,7 +118,7 @@
       font-size: 22px;
       color: var(--muted);
       line-height: 1;
-      transition: font-size 0.25s ease;
+      transition: color 0.25s ease;
     }
 
     .box .check {
@@ -217,16 +219,13 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
-  // Single shared AudioContext — created once on first tap
   let audioCtx = null;
 
   function getCtx() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
 
@@ -247,22 +246,6 @@
     } catch(e) {}
   }
 
-  function playUncheck() {
-    try {
-      const ctx = getCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.14);
-    } catch(e) {}
-  }
-
   function addRipple(el, e) {
     const rect = el.getBoundingClientRect();
     const x = (e.clientX || rect.left + rect.width/2) - rect.left;
@@ -278,16 +261,16 @@
   }
 
   function toggle(day, el, e) {
-    const idx = state.done.indexOf(day);
-    if (idx === -1) {
-      state.done.push(day);
-      el.classList.add('done');
-      playBeep();
-    } else {
-      state.done.splice(idx, 1);
-      el.classList.remove('done');
-      playUncheck();
-    }
+    // Already done — lock it, do nothing
+    if (state.done.includes(day)) return;
+
+    // Only allow the next day in sequence
+    const nextDay = state.done.length + 1;
+    if (day !== nextDay) return;
+
+    state.done.push(day);
+    el.classList.add('done');
+    playBeep();
     addRipple(el, e);
     save();
     updateStats();
