@@ -1,4 +1,4 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -34,7 +34,6 @@
     header { margin-bottom: 32px; }
 
     .label {
-      font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -79,7 +78,6 @@
     .progress-text strong { color: var(--accent); font-weight: 600; }
 
     .section-title {
-      font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
@@ -103,22 +101,39 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      cursor: not-allowed;
       transition: transform 0.12s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      opacity: 0.4;
     }
 
-    .box:active { transform: scale(0.88); }
+    .box.next {
+      cursor: pointer;
+      opacity: 1;
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(200, 241, 53, 0.2);
+    }
+
+    .box.next .day-num { color: var(--accent); }
+    .box.next:active { transform: scale(0.88); }
+
+    .box.done {
+      background: var(--done-bg);
+      border-color: var(--done-bg);
+      box-shadow: 0 0 20px rgba(200, 241, 53, 0.25);
+      cursor: default;
+      opacity: 1;
+    }
 
     .box .day-num {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 22px;
       color: var(--muted);
       line-height: 1;
-      transition: color 0.25s ease;
+      transition: font-size 0.25s ease, color 0.25s ease;
     }
 
     .box .check {
@@ -126,12 +141,6 @@
       position: absolute;
       transition: font-size 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
       color: var(--done-text);
-    }
-
-    .box.done {
-      background: var(--done-bg);
-      border-color: var(--done-bg);
-      box-shadow: 0 0 20px rgba(200, 241, 53, 0.25);
     }
 
     .box.done .day-num { font-size: 0px; }
@@ -203,7 +212,7 @@
     </div>
   </header>
 
-  <div class="section-title">Days — tap to complete</div>
+  <div class="section-title">Days — tap to complete in order</div>
   <div class="grid" id="grid"></div>
 
   <button class="reset-btn" onclick="resetAll()">↺ Reset All</button>
@@ -211,7 +220,10 @@
 
 <script>
   const TOTAL = 30;
-  const STORAGE_KEY = 'discipline_tracker_v1';
+  const STORAGE_KEY = 'discipline_tracker_v3';
+
+  // Wipe old versions
+  ['discipline_tracker_v1', 'discipline_tracker_v2'].forEach(k => localStorage.removeItem(k));
 
   let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { done: [] };
 
@@ -222,9 +234,7 @@
   let audioCtx = null;
 
   function getCtx() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
@@ -248,31 +258,26 @@
 
   function addRipple(el, e) {
     const rect = el.getBoundingClientRect();
-    const x = (e.clientX || rect.left + rect.width/2) - rect.left;
-    const y = (e.clientY || rect.top + rect.height/2) - rect.top;
+    const x = (e.clientX || rect.left + rect.width / 2) - rect.left;
+    const y = (e.clientY || rect.top + rect.height / 2) - rect.top;
     const ripple = document.createElement('span');
     ripple.className = 'ripple';
     ripple.style.left = x + 'px';
     ripple.style.top = y + 'px';
     ripple.style.width = ripple.style.height = rect.width + 'px';
-    ripple.style.marginLeft = ripple.style.marginTop = -(rect.width/2) + 'px';
+    ripple.style.marginLeft = ripple.style.marginTop = -(rect.width / 2) + 'px';
     el.appendChild(ripple);
     setTimeout(() => ripple.remove(), 500);
   }
 
-  function toggle(day, el, e) {
-    // Already done — lock it, do nothing
-    if (state.done.includes(day)) return;
-
-    // Only allow the next day in sequence
+  function tap(day, el, e) {
     const nextDay = state.done.length + 1;
-    if (day !== nextDay) return;
-
+    if (day !== nextDay) return; // only next in sequence
     state.done.push(day);
-    el.classList.add('done');
+    save();
     playBeep();
     addRipple(el, e);
-    save();
+    refreshGrid();
     updateStats();
   }
 
@@ -282,24 +287,32 @@
     document.getElementById('doneCount').textContent = done;
     document.getElementById('pctText').textContent = pct + '%';
     document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('streakCount').textContent = done;
+  }
 
-    let streak = 0;
-    for (let i = 1; i <= TOTAL; i++) {
-      if (state.done.includes(i)) streak++;
-      else break;
-    }
-    document.getElementById('streakCount').textContent = streak;
+  function refreshGrid() {
+    const nextDay = state.done.length + 1;
+    document.querySelectorAll('.box').forEach((box, i) => {
+      const day = i + 1;
+      box.className = 'box';
+      if (state.done.includes(day)) box.classList.add('done');
+      else if (day === nextDay) box.classList.add('next');
+    });
   }
 
   function buildGrid() {
     const grid = document.getElementById('grid');
     grid.innerHTML = '';
     document.getElementById('totalCount').textContent = TOTAL;
+    const nextDay = state.done.length + 1;
     for (let i = 1; i <= TOTAL; i++) {
       const box = document.createElement('div');
-      box.className = 'box' + (state.done.includes(i) ? ' done' : '');
+      let cls = 'box';
+      if (state.done.includes(i)) cls += ' done';
+      else if (i === nextDay) cls += ' next';
+      box.className = cls;
       box.innerHTML = `<span class="day-num">${i}</span><span class="check">✓</span>`;
-      box.addEventListener('click', (e) => toggle(i, box, e));
+      box.addEventListener('click', (e) => tap(i, box, e));
       grid.appendChild(box);
     }
     updateStats();
